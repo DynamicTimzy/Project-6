@@ -1,26 +1,51 @@
 ---
-- name: Install Python, Flask, and Node.js on Ubuntu
+- name: Install Python, Flask, and Node.js on Ubuntu or Fedora
   hosts: g1
   become: yes
   tasks:
-    - name: Update package lists
+    - name: Update package lists (Ubuntu)
       apt:
         update_cache: yes
+      when: ansible_distribution == "Ubuntu"
 
-    - name: Install Python3, Pip, and Virtual Environment
+    - name: Update package lists (Fedora)
+      dnf:
+        update_cache: yes
+      when: ansible_distribution == "Fedora"
+
+    - name: Install Python3, Pip, and Virtual Environment (Ubuntu)
       apt:
         name:
           - python3
           - python3-pip
           - python3-venv
         state: present
+      when: ansible_distribution == "Ubuntu"
 
-    - name: Install Node.js and npm
+    - name: Install Python3, Pip, and Virtual Environment (Fedora)
+      dnf:
+        name:
+          - python3
+          - python3-pip
+          - python3-virtualenv
+        state: present
+      when: ansible_distribution == "Fedora"
+
+    - name: Install Node.js and npm (Ubuntu)
       apt:
         name:
           - nodejs
           - npm
         state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Node.js and npm (Fedora)
+      dnf:
+        name:
+          - nodejs
+          - npm
+        state: present
+      when: ansible_distribution == "Fedora"
 
     - name: Verify Python installation
       command: python3 --version
@@ -45,4 +70,4 @@
         state: restarted
       loop:
         - postgresql
-
+...
