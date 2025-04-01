@@ -1,0 +1,31 @@
+---
+- name: Deploy Flask App
+  hosts: n1
+  become: yes
+  tasks:
+    - name: Install Python3 and Pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Clone Flask app
+      git:
+        repo: "https://github.com/DynamicTimzy/Project-6.git"
+        dest: "/var/www/flask-app"
+        version: main
+
+    - name: Install dependencies
+      pip:
+        requirements: /var/www/flask-app/requirements.txt
+        virtualenv: /var/www/flask-app/venv
+
+    - name: Set environment variables
+      template:
+        src: env.j2
+        dest: /var/www/flask-app/.env
+
+    - name: Start Gunicorn
+      command: gunicorn -w 3 -b 0.0.0.0:5000 app:app
+      args:
+        chdir: /var/www/flask-app
+---

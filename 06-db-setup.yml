@@ -1,0 +1,30 @@
+---
+- name: Setup PostgreSQL for Node.js & Flask
+  hosts: n2
+  become: yes
+  tasks:
+    - name: Install PostgreSQL
+      apt:
+        name: postgresql
+        state: present
+
+    - name: Ensure PostgreSQL service is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Create a database for apps
+      postgresql_db:
+        name: shared_db
+        state: present
+
+    - name: Create a database user
+      postgresql_user:
+        db: shared_db
+        name: admin123
+        password: project1234567890.
+        priv: "ALL"
+        state: present
+---
+

@@ -1,0 +1,36 @@
+---
+- name: Deploy Node.js App
+  hosts: n1
+  become: yes
+  tasks:
+    - name: Install Node.js
+      yum:
+        name: nodejs
+        state: present
+
+    - name: Install npm
+      yum:
+        name: npm
+        state: present
+
+    - name: Clone the Node.js app
+      git:
+        repo: "https://github.com/DynamicTimzy/Project-6.git"
+        dest: "/var/www/node-app"
+        version: main
+
+    - name: Install dependencies
+      command: npm install
+      args:
+        chdir: /var/www/node-app
+
+    - name: Set environment variables
+      template:
+        src: env.j2
+        dest: /var/www/node-app/.env
+
+    - name: Start Node.js app using PM2
+      command: pm2 start server.js --name node-app
+      args:
+        chdir: /var/www/node-app
+---
