@@ -23,3 +23,5 @@
     - name: Verify PostgreSQL installation
       command: psql --version
       register: postgres_version
+
+---
