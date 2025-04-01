@@ -1,18 +1,37 @@
 ---
-- name: Install PostgreSQL on Ubuntu 2023
+- name: Install PostgreSQL on Ubuntu or Fedora
   hosts: g1
   become: yes
   tasks:
-    - name: Update package lists
+    - name: Update package lists (Ubuntu)
       apt:
         update_cache: yes
+      when: ansible_distribution == "Ubuntu"
 
-    - name: Install PostgreSQL and contrib packages
+    - name: Update package lists (Fedora)
+      dnf:
+        update_cache: yes
+      when: ansible_distribution == "Fedora"
+
+    - name: Install PostgreSQL and contrib packages (Ubuntu)
       apt:
         name:
           - postgresql
           - postgresql-contrib
         state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install PostgreSQL and contrib packages (Fedora)
+      dnf:
+        name:
+          - postgresql-server
+          - postgresql-contrib
+        state: present
+      when: ansible_distribution == "Fedora"
+
+    - name: Initialize PostgreSQL database (Fedora)
+      command: postgresql-setup --initdb
+      when: ansible_distribution == "Fedora"
 
     - name: Enable and start PostgreSQL service
       systemd:
@@ -23,3 +42,4 @@
     - name: Verify PostgreSQL installation
       command: psql --version
       register: postgres_version
+...
