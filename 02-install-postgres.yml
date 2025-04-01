@@ -1,0 +1,25 @@
+---
+- name: Install PostgreSQL on Ubuntu 2023
+  hosts: g1
+  become: yes
+  tasks:
+    - name: Update package lists
+      apt:
+        update_cache: yes
+
+    - name: Install PostgreSQL and contrib packages
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+
+    - name: Enable and start PostgreSQL service
+      systemd:
+        name: postgresql
+        enabled: yes
+        state: started
+
+    - name: Verify PostgreSQL installation
+      command: psql --version
+      register: postgres_version

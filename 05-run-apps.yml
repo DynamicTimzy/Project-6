@@ -1,0 +1,43 @@
+---
+- name: Start Flask and Node.js Applications
+  hosts: g1
+  become: yes
+  vars:
+    project_dir: /home/ubuntu/project_file
+
+  tasks:
+    - name: Ensure Flask directory exists
+      file:
+        path: "{{ project_dir }}/flask_app/"
+        state: directory
+        mode: '0755'
+
+    - name: Create a Python virtual environment
+      command: python3 -m venv "{{ project_dir }}/flask_app/venv"
+      args:
+        chdir: "{{ project_dir }}/flask_app/"
+
+    - name: Install Python dependencies in virtual environment
+      shell: "{{ project_dir }}/flask_app/venv/bin/pip install -r requirements.txt"
+      args:
+        chdir: "{{ project_dir }}/flask_app/"
+
+    - name: Start Flask app in the background using virtual environment
+      shell: "{{ project_dir }}/flask_app/venv/bin/python app.py &"
+      args:
+        chdir: "{{ project_dir }}/flask_app/"
+
+    - name: Ensure Node.js directory exists
+      file:
+        path: "{{ project_dir }}/node_app/"
+        state: directory
+        mode: '0755'
+    - name: Install Node.js dependencies
+      command: npm install
+      args:
+        chdir: "{{ project_dir }}/node_app/"
+    - name: Start Node.js app in the background
+      shell: node index.js &
+      args:
+        chdir: "{{ project_dir }}/node_app/"
+

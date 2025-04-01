@@ -1,0 +1,48 @@
+---
+- name: Install Python, Flask, and Node.js on Ubuntu
+  hosts: g1
+  become: yes
+  tasks:
+    - name: Update package lists
+      apt:
+        update_cache: yes
+
+    - name: Install Python3, Pip, and Virtual Environment
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: Install Node.js and npm
+      apt:
+        name:
+          - nodejs
+          - npm
+        state: present
+
+    - name: Verify Python installation
+      command: python3 --version
+      register: python_version
+
+    - name: Verify Pip installation
+      command: pip3 --version
+      register: pip_version
+
+    - name: Verify Node.js installation
+      command: node --version
+      register: node_version
+
+    - name: Verify npm installation
+      command: npm --version
+      register: npm_version
+
+  handlers:
+    - name: Restart services (if necessary)
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - postgresql
+

@@ -1,0 +1,48 @@
+---
+- name: Initialize and Setup PostgreSQL Database
+  hosts: g1
+  become: yes
+  vars:
+    db_name: sharedappdb
+    db_user: postgres
+    sql_file: /home/ubuntu/project_file/db/init.sql
+    home_dir: /home/ubuntu  # Modify this to your actual home directory path
+    project_dir: /home/ubuntu/project_file  # Modify this to your actual project directory path
+    pg_hba_conf_path: "/etc/postgresql/16/main/pg_hba.conf"  # Corrected path for PostgreSQL 16
+
+  tasks:
+    - name: Modify pg_hba.conf to use md5 authentication
+      command: sed -i "s/ident/md5/g" {{ pg_hba_conf_path }}
+
+    - name: Ensure $HOME_DIR has executable permissions
+      command: chmod +x {{ home_dir }}
+    
+    - name: Execute init.sql as postgres user
+      become: yes
+      command: sudo -u postgres psql -f {{ project_dir }}/db/init.sql
+
+    - name: Create devops user with password
+      become: yes
+      command: sudo -u postgres psql -c "CREATE USER devops WITH PASSWORD 'password';"
+
+    - name: Grant CONNECT privilege on sharedappdb to devops
+      become: yes
+      command: sudo -u postgres psql -c "GRANT CONNECT ON DATABASE sharedappdb TO devops;"
+
+    - name: Grant ALL PRIVILEGES on sharedappdb to devops
+      become: yes
+      command: sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sharedappdb TO devops;"
+
+    - name: Grant ALL PRIVILEGES on devs table to devops
+      become: yes
+      command: sudo -u postgres psql sharedappdb -c "GRANT ALL PRIVILEGES ON TABLE devs TO devops;"
+
+    - name: Restart PostgreSQL service
+      systemd:
+        name: postgresql
+        state: restarted
+
+    - name: Verify the database creation
+      become: yes
+      command: sudo -u postgres psql -d sharedappdb -c "SELECT * FROM devs;"
+
