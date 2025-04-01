@@ -21,9 +21,16 @@
       become: yes
       command: sudo -u postgres psql -f {{ project_dir }}/db/init.sql
 
+    - name: Check if devops user exists
+      become: yes
+      command: sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='devops';"
+      register: user_exists
+      changed_when: false
+
     - name: Create devops user with password
       become: yes
       command: sudo -u postgres psql -c "CREATE USER devops WITH PASSWORD 'password';"
+      when: user_exists.stdout | trim == ""
 
     - name: Grant CONNECT privilege on sharedappdb to devops
       become: yes
