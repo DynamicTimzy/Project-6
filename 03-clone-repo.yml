@@ -2,14 +2,20 @@
   hosts: g1
   become: yes
   vars:
-    project_dir: "/home/ubuntu"
+    project_dir: "{{ '/home/ubuntu' if ansible_distribution == 'Ubuntu' else '/home/fedora' }}"
 
   tasks:
-
-    - name: Install Git (if not installed)
+    - name: Install Git (Ubuntu)
       apt:
         name: git
         state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Git (Fedora)
+      dnf:
+        name: git
+        state: present
+      when: ansible_distribution == "Fedora"
 
     - name: Clone the GitHub repository
       git:
@@ -23,4 +29,4 @@
       args:
         removes: "{{ project_dir }}/Project-6"
         creates: "{{ project_dir }}/project_file"
-
+...
