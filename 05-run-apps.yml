@@ -3,7 +3,7 @@
   hosts: g1
   become: yes
   vars:
-    project_dir: /home/ubuntu/project_file
+    project_dir: "{{ '/home/ubuntu/project_file' if ansible_distribution == 'Ubuntu' else '/home/fedora/project_file' }}"
 
   tasks:
     - name: Ensure Flask directory exists
@@ -32,12 +32,13 @@
         path: "{{ project_dir }}/node_app/"
         state: directory
         mode: '0755'
+    
     - name: Install Node.js dependencies
       command: npm install
       args:
         chdir: "{{ project_dir }}/node_app/"
+    
     - name: Start Node.js app in the background
       shell: node index.js &
       args:
         chdir: "{{ project_dir }}/node_app/"
-
