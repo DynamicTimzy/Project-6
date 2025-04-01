@@ -17,16 +17,16 @@
         state: present
       when: ansible_distribution == "Fedora"
 
-    - name: Clone the GitHub repository
+    - name: Clone the GitHub repository (troubleshoot branch)
       git:
         repo: "https://github.com/DynamicTimzy/Project-6.git"
         dest: "{{ project_dir }}/Project-6"
         clone: yes
         update: yes
+        version: troubleshoot
 
     - name: Rename the cloned repository to project_file
       command: mv "{{ project_dir }}/Project-6" "{{ project_dir }}/project_file"
       args:
         removes: "{{ project_dir }}/Project-6"
         creates: "{{ project_dir }}/project_file"
-...
