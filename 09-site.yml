@@ -1,0 +1,6 @@
+---
+- import_playbook: db-setup.yml
+- import_playbook: node-app.yml
+- import_playbook: flask-app.yml
+
+---

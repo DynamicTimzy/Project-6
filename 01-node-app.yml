@@ -1,0 +1,34 @@
+---
+- name: Install node and npm    # A name to identify the playbook
+  hosts: n1                 # The target host to execute the tasks on
+  tasks:                         # List of tasks to be performed
+  - name: Update yum repo and cache  
+    yum: update_cache=yes force_apt_get=yes cache_valid_time=3600 # Update apt repository and cache
+  - name: Install nodejs and npm 
+    yum:                        # Install Node.js and NPM
+      pkg:
+      - nodejs
+      - npm
+
+- name: Deploy nodejs app       
+  hosts: n1                 # The target host to execute the tasks on
+  become: True                   # Switch to the root user for executing tasks
+ 
+  tasks:                         # List of tasks to be performed
+  - name: unpack the nodejs file  
+    unarchive:                  # Unpack the Node.js app
+      src:
+      dest: /home/              # add the destination path
+  - name: Install dependencies  
+    npm:                        # Install app dependencies
+      path: /home/               # ad the path
+  - name: Start the application 
+    command:                    # Start the Node.js app
+      chdir: /home/             # add path to the child directory
+      cmd: node server
+    async: 1000                 # Run the command asynchronously
+    poll: 0                     # Do not wait for the command to finish
+  - name: Ensure app is running  
+    shell: ps aux | grep node   # Check if the app is running
+    register: app_status        # Register the output of the command as a variable
+  - debug: msg={{app_status.stdout_lines}} # Print the output of the previous task for debugging purposes      
