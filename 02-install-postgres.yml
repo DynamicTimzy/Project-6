@@ -7,39 +7,42 @@
       apt:
         update_cache: yes
       when: ansible_distribution == "Ubuntu"
-
     - name: Update package lists (Fedora)
       dnf:
         update_cache: yes
       when: ansible_distribution == "Fedora"
-
     - name: Install PostgreSQL and contrib packages (Ubuntu)
       apt:
         name:
           - postgresql
           - postgresql-contrib
+          - libpq-dev
         state: present
       when: ansible_distribution == "Ubuntu"
-
     - name: Install PostgreSQL and contrib packages (Fedora)
       dnf:
         name:
           - postgresql-server
           - postgresql-contrib
+          - postgresql-devel
         state: present
       when: ansible_distribution == "Fedora"
-
     - name: Initialize PostgreSQL database (Fedora)
       command: postgresql-setup --initdb
       when: ansible_distribution == "Fedora"
-
     - name: Enable and start PostgreSQL service
       systemd:
         name: postgresql
         enabled: yes
         state: started
-
     - name: Verify PostgreSQL installation
       command: psql --version
       register: postgres_version
+    - name: Install Python3, Pip, and Virtual Environment
+      package:
+        name:
+          - python3
+          - python3-pip
+          - python3-virtualenv
+        state: present
 ...
