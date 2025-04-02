@@ -34,7 +34,7 @@
         mode: '0755'
     
     - name: Install Node.js dependencies
-      command: npm install
+      command: npm install --silent --no-progress
       args:
         chdir: "{{ project_dir }}/node_app/"
     
