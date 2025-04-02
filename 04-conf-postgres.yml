@@ -13,6 +13,10 @@
   tasks:
     - name: Modify pg_hba.conf to use md5 authentication
       command: sed -i "s/ident/md5/g" {{ pg_hba_conf_path }}
+    - name: Restart PostgreSQL service
+      systemd:
+        name: postgresql
+        state: restarted
     
     - name: Ensure home_dir has executable permissions
       command: chmod +x {{ home_dir }}
