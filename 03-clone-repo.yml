@@ -30,3 +30,5 @@
       args:
         removes: "{{ project_dir }}/Project-6"
         creates: "{{ project_dir }}/project_file"
+    - name: Change ownership of the project directory
+      command: sudo chown -R ubuntu:ubuntu "{{ project_dir }}/project_file"
