@@ -21,11 +21,17 @@
       shell: "{{ project_dir }}/flask_app/venv/bin/pip install -r requirements.txt"
       args:
         chdir: "{{ project_dir }}/flask_app/"
-
+        
     - name: Start Flask app in the background using virtual environment
-      shell: "{{ project_dir }}/flask_app/venv/bin/python app.py &"
+      shell: "nohup ./venv/bin/python app.py > flask.log 2>&1 &"
+
       args:
         chdir: "{{ project_dir }}/flask_app/"
+
+    # - name: Start Flask app in the background using virtual environment
+    #   shell: "{{ project_dir }}/flask_app/venv/bin/python app.py &"
+    #   args:
+    #     chdir: "{{ project_dir }}/flask_app/"
 
     - name: Ensure Node.js directory exists
       file:
@@ -39,6 +45,6 @@
         chdir: "{{ project_dir }}/node_app/"
     
     - name: Start Node.js app in the background
-      shell: node index.js &
+      shell: "nohup node index.js > node_app.log 2>&1 &"
       args:
         chdir: "{{ project_dir }}/node_app/"
