@@ -1,46 +1,63 @@
 pipeline {
-    agent { label 'Ansible-master' }  // This defines the agent where the pipeline will run
-
-    environment {
-        ANSIBLE_INVENTORY = '~/Project-6/hosts.ini'  // Define the path to your Ansible inventory file
-        ANSIBLE_PLAYBOOK_DIR = '~/Project-6/playbooks' // Define the directory where the Ansible playbooks are located
+  agent {
+    label 'ansible-master'
+  } // This defines the agent where the pipeline will run
+  environment {
+    BUILD_STATUS='SUCCESS' // Default status set at the start
+  }
+  stages {
+    stage('Checkout Git Repository') {
+      steps {
+        script {
+          // Perform the Git checkout of the troubleshoot branch
+          git branch: 'troubleshoot', url: 'https://github.com/DynamicTimzy/Project-6.git'
+        }
+      }
     }
 
-    stages {
-        stage('Checkout Git Repository') {
-            steps {
-                script {
-                    // Perform the Git checkout of the troubleshoot branch
-                    git branch: 'troubleshoot', url: 'https://github.com/DynamicTimzy/Project-6.git'
-                }
-            }
+    stage('Run Ansible Playbook') {
+      steps {
+        script {
+          // Run the Ansible playbook after the checkout
+          sh """
+          sudo chmod +x install_ansible.sh
+          sudo ./install_ansible.sh
+          ansible-playbook 01-* -i hosts.ini && sleep 5 && \
+          ansible-playbook 02-* -i hosts.ini && sleep 5 && \
+          ansible-playbook 03-* -i hosts.ini && sleep 5 && \
+          ansible-playbook 04-* -i hosts.ini && sleep 5 && \
+          ansible-playbook 05-* -i hosts.ini 
+          """
         }
-
-        stage('Run Ansible Playbook') {
-            steps {
-                script {
-                  // Run the Ansible playbook after the checkout
-                  sh """
-                  cd Project-6
-                  sudo ./install_ansible.sh
-                  ansible-playbook 01-* -i hosts.ini && sleep 5 && \
-                  ansible-playbook 02-* -i hosts.ini && sleep 5 && \
-                  ansible-playbook 03-* -i hosts.ini && sleep 5 && \
-                  ansible-playbook 04-* -i hosts.ini && sleep 5 && \
-                  ansible-playbook 05-* -i hosts.ini
-                  """
-                  # ansible-playbook ${ANSIBLE_PLAYBOOK_DIR}/playbook.yml -i ${ANSIBLE_INVENTORY} --ask-become-pass
-                }
-            }
-        }
+      }
     }
+  }
 
-    post {
-        success {
-            echo 'Playbook executed successfully.'
-        }
-        failure {
-            echo 'Playbook execution failed.'
-        }
+  // post {
+  //     success {
+  //         echo 'Playbook executed successfully.'
+  //     }
+  //     failure {
+  //         echo 'Playbook execution failed.'
+  //     }
+  // }
+  post {
+    always {
+      script {
+        // Update BUILD_STATUS dynamically
+        currentBuild.result = currentBuild.result ?: 'SUCCESS' // Default to SUCCESS if not set
+        env.BUILD_STATUS = currentBuild.result // Make BUILD_STATUS globally available
+      }
+
+      emailext(
+        body: """
+          <h3>Build Notification</h3>
+          <p>Build <strong>${BUILD_NUMBER}</strong> of <strong>${JOB_NAME}</strong> finished with status: <strong>${env.BUILD_STATUS}</strong></p>
+          <p>Check console output at <a href="${BUILD_URL}">this link</a> to view the results.</p>
+        """,
+        subject: "Build # ${BUILD_NUMBER} - ${JOB_NAME} - ${env.BUILD_STATUS}",
+        to: 'yimikacreations@gmail.com'
+      )
     }
+  }
 }
