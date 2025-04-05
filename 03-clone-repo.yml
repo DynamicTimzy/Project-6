@@ -25,18 +25,18 @@
         update: yes
         version: alpha
 
-    - name: Rename the cloned repository to project_file
-      command: mv "{{ project_dir }}/Project-6" "{{ project_dir }}/project_file"
-      args:
-        removes: "{{ project_dir }}/Project-6"
-        creates: "{{ project_dir }}/project_file"
+    # - name: Rename the cloned repository to project_file
+    #   command: mv "{{ project_dir }}/Project-6" "{{ project_dir }}/project_file"
+    #   args:
+    #     removes: "{{ project_dir }}/Project-6"
+    #     creates: "{{ project_dir }}/project_file"
 
-    - name: Change ownership of the project directory
-      file:
-        path: "{{ project_dir }}/project_file"
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
-        recurse: yes
+    # - name: Change ownership of the project directory
+    #   file:
+    #     path: "{{ project_dir }}/project_file"
+    #     owner: "{{ ansible_user_id }}"
+    #     group: "{{ ansible_user_id }}"
+    #     recurse: yes
 
 
 # - name: Clone GitHub Repository and Rename
