@@ -27,6 +27,13 @@
           - postgresql-devel
         state: present
       when: ansible_os_family == "RedHat"
+      
+    - name: Remove old PostgreSQL data directory (if it exists)
+      file:
+        path: /var/lib/pgsql/data
+        state: absent
+      become: yes
+      when: ansible_os_family == "RedHat"
      
     - name: Initialize PostgreSQL database (RedHat)
       command: postgresql-setup --initdb
