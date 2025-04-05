@@ -3,7 +3,9 @@
   hosts: g1
   become: yes
   vars:
-    project_dir: "/home/{{ ansible_user_id }}/project_file"
+    home_dir: "{{ '/home/ubuntu' if ansible_distribution == 'Ubuntu' else '/home/fedora' if ansible_distribution == "Fedora" else '/home/cloud-user' }}"
+    project_dir: "{{ home_dir }}/project_file"
+        
 
   tasks:
     - name: Ensure Flask directory exists
@@ -11,27 +13,29 @@
         path: "{{ project_dir }}/flask_app/"
         state: directory
         mode: '0755'
-
-    - name: Create a Python virtual environment
+    - name: Check if virtual environment exists
+      stat:
+        path: "{{ project_dir }}/flask_app/venv/bin/activate"
+      register: venv_stat
+      ignore_errors: yes
+    - name: Create a Python virtual environment if it doesn't exist
       command: python3 -m venv "{{ project_dir }}/flask_app/venv"
       args:
         chdir: "{{ project_dir }}/flask_app/"
-      creates: "{{ project_dir }}/flask_app/venv/bin/activate"
+      when: venv_stat.stat.exists is not defined or not venv_stat.stat.exists
+      
 
+# ISSUE HERE FOR REDHAT DISTRO
     - name: Install Python dependencies in virtual environment
-      shell: "{{ project_dir }}/flask_app/venv/bin/pip install -r requirements.txt"
+      shell: "cd {{ project_dir }}/flask_app/venv/bin/pip install -r requirements.txt"
       args:
         chdir: "{{ project_dir }}/flask_app/"
+# END OF ISSUE
         
     - name: Start Flask app in the background using virtual environment
       shell: "nohup ./venv/bin/python app.py > flask.log 2>&1 &"
       args:
         chdir: "{{ project_dir }}/flask_app/"
-
-    # - name: Start Flask app in the background using virtual environment
-    #   shell: "{{ project_dir }}/flask_app/venv/bin/python app.py &"
-    #   args:
-    #     chdir: "{{ project_dir }}/flask_app/"
 
     - name: Ensure Node.js directory exists
       file:
