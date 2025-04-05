@@ -20,7 +20,7 @@
           - python3-pip
           - python3-venv
         state: present
-      when: ansible_distribution == "Debian"
+      when: ansible_os_family == "Debian"
 
     - name: Install Python3, Pip, and Virtual Environment (RedHat)
       dnf:
@@ -37,7 +37,7 @@
           - nodejs
           - npm
         state: present
-      when: ansible_distribution == "Debian"
+      when: ansible_os_family == "Debian"
 
     - name: Install Node.js and npm (RedHat)
       dnf:
