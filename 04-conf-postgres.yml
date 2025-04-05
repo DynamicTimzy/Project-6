@@ -5,9 +5,9 @@
   vars:
     db_name: sharedappdb
     db_user: postgres
-    sql_file: "/home/{{ ansible_user_id }}/project_file/db/init.sql"
+    sql_file: "/home/{{ ansible_user_id }}/Project-6/db/init.sql"
     home_dir: "/home/{{ ansible_user_id }}"
-    project_dir: "{{ home_dir }}/project_file"
+    project_dir: "{{ home_dir }}/Project-6"
     pg_hba_conf_path: "{{ '/etc/postgresql/16/main/pg_hba.conf' if
       ansible_os_family == 'Debian' else '/var/lib/pgsql/data/pg_hba.conf'
       }}"
