@@ -1,51 +1,51 @@
 ---
-- name: Install Python, Flask, and Node.js on Ubuntu or Fedora
+- name: Install Python, Flask, and Node.js on Debian or RedHat
   hosts: g1
   become: yes
   tasks:
-    - name: Update package lists (Ubuntu)
+    - name: Update package lists (Debian)
       apt:
         update_cache: yes
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_os_family == "Debian"
 
-    - name: Update package lists (Fedora)
+    - name: Update package lists (RedHat)
       dnf:
         update_cache: yes
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
 
-    - name: Install Python3, Pip, and Virtual Environment (Ubuntu)
+    - name: Install Python3, Pip, and Virtual Environment (Debian)
       apt:
         name:
           - python3
           - python3-pip
           - python3-venv
         state: present
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Debian"
 
-    - name: Install Python3, Pip, and Virtual Environment (Fedora)
+    - name: Install Python3, Pip, and Virtual Environment (RedHat)
       dnf:
         name:
           - python3
           - python3-pip
           - python3-virtualenv
         state: present
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
 
-    - name: Install Node.js and npm (Ubuntu)
+    - name: Install Node.js and npm (Debian)
       apt:
         name:
           - nodejs
           - npm
         state: present
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Debian"
 
-    - name: Install Node.js and npm (Fedora)
+    - name: Install Node.js and npm (RedHat)
       dnf:
         name:
           - nodejs
           - npm
         state: present
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
 
     - name: Verify Python installation
       command: python3 --version
