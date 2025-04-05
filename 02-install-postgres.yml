@@ -27,17 +27,10 @@
           - postgresql-devel
         state: present
       when: ansible_distribution == "Fedora"
-
-      # Just added the below ubuntu step; instead of doing both separately
-      
-    - name: Initialize PostgreSQL database (Ubuntu & Fedora)
+     
+    - name: Initialize PostgreSQL database (Fedora)
       command: postgresql-setup --initdb
-      # when: ansible_distribution == "Ubuntu"
-
-      
-    # - name: Initialize PostgreSQL database (Fedora)
-    #   command: postgresql-setup --initdb
-    #   when: ansible_distribution == "Fedora"
+      when: ansible_distribution == "Fedora"
       
     - name: Enable and start PostgreSQL service
       systemd:
