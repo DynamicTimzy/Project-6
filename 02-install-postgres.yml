@@ -1,36 +1,36 @@
 ---
-- name: Install PostgreSQL on Ubuntu or Fedora
+- name: Install PostgreSQL on Debian or RedHat
   hosts: g1
   become: yes
   tasks:
-    - name: Update package lists (Ubuntu)
+    - name: Update package lists (Debian)
       apt:
         update_cache: yes
-      when: ansible_distribution == "Ubuntu"
-    - name: Update package lists (Fedora)
+      when: ansible_os_family == "Debian"
+    - name: Update package lists (RedHat)
       dnf:
         update_cache: yes
-      when: ansible_distribution == "Fedora"
-    - name: Install PostgreSQL and contrib packages (Ubuntu)
+      when: ansible_os_family == "RedHat"
+    - name: Install PostgreSQL and contrib packages (Debian)
       apt:
         name:
           - postgresql
           - postgresql-contrib
           - libpq-dev
         state: present
-      when: ansible_distribution == "Ubuntu"
-    - name: Install PostgreSQL and contrib packages (Fedora)
+      when: ansible_os_family == "Debian"
+    - name: Install PostgreSQL and contrib packages (RedHat)
       dnf:
         name:
           - postgresql-server
           - postgresql-contrib
           - postgresql-devel
         state: present
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
      
-    - name: Initialize PostgreSQL database (Fedora)
+    - name: Initialize PostgreSQL database (RedHat)
       command: postgresql-setup --initdb
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
       
     - name: Enable and start PostgreSQL service
       systemd:
