@@ -2,33 +2,74 @@
   hosts: g1
   become: yes
   vars:
-    project_dir: "{{ '/home/ubuntu' if ansible_distribution == 'Ubuntu' else '/home/fedora' }}"
+    project_dir: "/home/{{ ansible_user_id }}"
 
   tasks:
-    - name: Install Git (Ubuntu)
+    - name: Install Git (Debian)
       apt:
         name: git
         state: present
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_os_family == "Debian"
 
-    - name: Install Git (Fedora)
+    - name: Install Git (RedHat)
       dnf:
         name: git
         state: present
-      when: ansible_distribution == "Fedora"
+      when: ansible_os_family == "RedHat"
 
-    - name: Clone the GitHub repository (troubleshoot branch)
+    - name: Clone the GitHub repository (Alpha branch)
       git:
         repo: "https://github.com/DynamicTimzy/Project-6.git"
         dest: "{{ project_dir }}/Project-6"
         clone: yes
         update: yes
-        version: troubleshoot
+        version: alpha
 
     - name: Rename the cloned repository to project_file
       command: mv "{{ project_dir }}/Project-6" "{{ project_dir }}/project_file"
       args:
         removes: "{{ project_dir }}/Project-6"
         creates: "{{ project_dir }}/project_file"
+
     - name: Change ownership of the project directory
-      command: sudo chown -R ubuntu:ubuntu "{{ project_dir }}/project_file"
+      file:
+        path: "{{ project_dir }}/project_file"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        recurse: yes
+
+
+# - name: Clone GitHub Repository and Rename
+#   hosts: g1
+#   become: yes
+#   vars:
+#     project_dir: "/home/{{ ansible_user_id }}"
+
+#   tasks:
+#     - name: Install Git (Debian)
+#       apt:
+#         name: git
+#         state: present
+#       when: ansible_os_family == "Debian"
+
+#     - name: Install Git (RedHat)
+#       dnf:
+#         name: git
+#         state: present
+#       when: ansible_os_family == "RedHat"
+
+#     - name: Clone the GitHub repository (Alpha branch)
+#       git:
+#         repo: "https://github.com/DynamicTimzy/Project-6.git"
+#         dest: "{{ project_dir }}/Project-6"
+#         clone: yes
+#         update: yes
+#         version: alpha
+
+#     - name: Rename the cloned repository to project_file
+#       command: mv "{{ project_dir }}/Project-6" "{{ project_dir }}/project_file"
+#       args:
+#         removes: "{{ project_dir }}/Project-6"
+#         creates: "{{ project_dir }}/project_file"
+#     - name: Change ownership of the project directory
+#       command: sudo chown -R {{ ansible_user_id }}:{{ ansible_user_id }} "{{ project_dir }}/project_file"
