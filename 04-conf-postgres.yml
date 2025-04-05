@@ -5,13 +5,11 @@
   vars:
     db_name: sharedappdb
     db_user: postgres
-    sql_file: "{{ '/home/ubuntu/project_file/db/init.sql' if ansible_distribution ==
-      'Ubuntu' else '/home/fedora/project_file/db/init.sql' }}"
-    home_dir: "{{ '/home/ubuntu' if ansible_distribution == 'Ubuntu' else
-      '/home/fedora' }}"
+    sql_file: "/home/{{ ansible_user_id }}/project_file/db/init.sql"
+    home_dir: "/home/{{ ansible_user_id }}"
     project_dir: "{{ home_dir }}/project_file"
     pg_hba_conf_path: "{{ '/etc/postgresql/16/main/pg_hba.conf' if
-      ansible_distribution == 'Ubuntu' else '/var/lib/pgsql/data/pg_hba.conf'
+      ansible_os_family == 'Debian' else '/var/lib/pgsql/data/pg_hba.conf'
       }}"
   tasks:
     - name: Modify pg_hba.conf to use md5 authentication
@@ -21,7 +19,8 @@
         name: postgresql
         state: restarted
     - name: Ensure home_dir has executable permissions
-      command: chmod +x {{ home_dir }}
+      become: yes
+      command: sudo chmod +x {{ home_dir }}
     - name: Execute init.sql as postgres user
       become: yes
       command: sudo -u postgres psql -f {{ project_dir }}/db/init.sql
