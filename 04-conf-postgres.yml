@@ -58,6 +58,13 @@
         regexp: ^host\s+all\s+devops\s+127.0.0.1/32\s+
         line: host    all             devops   127.0.0.1/32    md5
         state: present
+    - name: Create or edit .pgpass file for automatic authentication
+      copy:
+        dest: "/home/{{ ansible_user_id }}/.pgpass"
+        content: "localhost:5432:sharedappdb:devops:password\n"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: '0600'
     - name: Restart PostgreSQL service
       systemd:
         name: postgresql
