@@ -3,7 +3,7 @@
   hosts: g1
   become: yes
   vars:
-    project_dir: "{{ '/home/ubuntu/project_file' if ansible_distribution == 'Ubuntu' else '/home/fedora/project_file' }}"
+    project_dir: "/home/{{ ansible_user_id }}/project_file"
 
   tasks:
     - name: Ensure Flask directory exists
@@ -16,6 +16,7 @@
       command: python3 -m venv "{{ project_dir }}/flask_app/venv"
       args:
         chdir: "{{ project_dir }}/flask_app/"
+      creates: "{{ project_dir }}/flask_app/venv/bin/activate"
 
     - name: Install Python dependencies in virtual environment
       shell: "{{ project_dir }}/flask_app/venv/bin/pip install -r requirements.txt"
@@ -24,7 +25,6 @@
         
     - name: Start Flask app in the background using virtual environment
       shell: "nohup ./venv/bin/python app.py > flask.log 2>&1 &"
-
       args:
         chdir: "{{ project_dir }}/flask_app/"
 
