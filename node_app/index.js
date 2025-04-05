@@ -13,7 +13,7 @@ const pool = new Pool({
 app.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT name FROM devs');
-    const names = result.rows.map(row => <li>${row.name}</li>).join('');
+    const names = result.rows.map(row => `<li>${row.name}</li>`).join('');
 
     res.send(`
       <!DOCTYPE html>
