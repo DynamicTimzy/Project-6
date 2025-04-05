@@ -27,7 +27,13 @@
           - postgresql-devel
         state: present
       when: ansible_os_family == "RedHat"
-      
+
+
+# We need to clear the files in data dir before RedHat family can initialize a PostgreDB, Debians are lenient and can still function with existing files and directories.
+# 1. Different Default Database Initialization Process
+# Fedora/RedHat-based systems: On RedHat-based systems (including Fedora), PostgreSQL uses the postgresql-setup utility to initialize the database. This utility typically expects the data directory (/var/lib/pgsql/data) to be empty when initializing the database for the first time. If there are any remnants from a previous PostgreSQL installation, it will fail with the error you're seeing.
+
+# Ubuntu/Debian-based systems: On Debian-based systems like Ubuntu, PostgreSQL uses the pg_createcluster utility to create and initialize database clusters. This utility is more flexible and can handle pre-existing directories or clusters more gracefully, typically overwriting them or using a different approach.
     - name: Remove old PostgreSQL data directory (if it exists)
       file:
         path: /var/lib/pgsql/data
