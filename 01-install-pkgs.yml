@@ -12,6 +12,12 @@
       dnf:
         update_cache: yes
       when: ansible_os_family == "RedHat"
+    - name: Install EPEL repository (RedHat)
+      become: yes
+      package:
+        name: epel-release
+        state: present
+      when: ansible_os_family == "RedHat"
 
     - name: Install Python3, Pip, and Virtual Environment (Debian)
       apt:
@@ -28,6 +34,7 @@
           - python3
           - python3-pip
           - python3-virtualenv
+          - python3-devel
         state: present
       when: ansible_os_family == "RedHat"
 
