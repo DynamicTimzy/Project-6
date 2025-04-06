@@ -9,8 +9,8 @@ pipeline {
     stage('Checkout Git Repository') {
       steps {
         script {
-          // Perform the Git checkout of the troubleshoot branch
-          git branch: 'troubleshoot', url: 'https://github.com/DynamicTimzy/Project-6.git'
+          // Perform the Git checkout of the main branch
+          git branch: 'main', url: 'https://github.com/DynamicTimzy/Project-6.git'
         }
       }
     }
