@@ -21,6 +21,8 @@
       shell: sudo -u postgres psql -d sharedappdb -f /home/ubuntu/project_file/db/init.sql
       when: ansible_os_family == 'Debian'
 
+      
+
     # For Red Hat-based systems (like CentOS):
     - name: Install PostgreSQL 15 on Red Hat-based systems (CentOS)
       dnf:
@@ -44,6 +46,13 @@
           - postgresql15
         state: present
       when: ansible_os_family == 'RedHat'
+      
+    - name: Remove old PostgreSQL data directory (if it exists)
+      file:
+        path: /var/lib/pgsql/data
+        state: absent
+      become: yes
+      when: ansible_os_family == "RedHat"
 
     - name: Initialize PostgreSQL 15 on Red Hat-based systems (CentOS)
       shell: sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
