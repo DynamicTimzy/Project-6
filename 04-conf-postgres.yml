@@ -1,74 +1,182 @@
 ---
 - name: Initialize and Setup PostgreSQL Database
   hosts: g1
-  become: yes
+  become: true
   vars:
     db_name: sharedappdb
     db_user: postgres
-    home_dir: "/home/{{ ansible_user_id }}"
+    home_dir: "/home/{{ ansible_user }}"
     project_dir: "{{ home_dir }}/project_file"
     sql_file: "{{ project_dir }}/db/init.sql"
-    pg_hba_conf_path: "{{ '/etc/postgresql/16/main/pg_hba.conf' if
-      ansible_os_family == 'Debian' else '/var/lib/pgsql/data/pg_hba.conf'
-      }}"
+    pg_hba_conf_path: "{{ '/etc/postgresql/16/main/pg_hba.conf' if ansible_os_family == 'Debian' else '/var/lib/pgsql/data/pg_hba.conf' }}"
+
   tasks:
     - name: Modify pg_hba.conf to use md5 authentication
-      command: sed -i "s/ident/md5/g" {{ pg_hba_conf_path }}
+      ansible.builtin.shell: sed -i "s/ident/md5/g" {{ pg_hba_conf_path }}
+      become: yes
+
     - name: Restart PostgreSQL service
       systemd:
         name: postgresql
         state: restarted
+      become: yes
+
     - name: Ensure home_dir has executable permissions
+      ansible.builtin.command: sudo chmod +x {{ home_dir }}
       become: yes
-      command: sudo chmod +x {{ home_dir }}
-    - name: Execute init.sql as postgres user
-      become: yes
-      command: sudo -u postgres psql -f {{ project_dir }}/db/init.sql
+
+    - name: Create sharedappdb database
+      ansible.builtin.shell: psql -c "CREATE DATABASE {{ db_name }};"
+      become_user: postgres
+      when: not user_exists.stdout | search('CREATE DATABASE')
+
+    - name: Run init.sql in sharedappdb
+      ansible.builtin.shell: psql -d {{ db_name }} -f {{ sql_file }}
+      become_user: postgres
+
     - name: Check if devops user exists
-      become: yes
-      command: sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE
-        rolname='devops';"
+      ansible.builtin.shell: "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname='devops';\""
       register: user_exists
+      become_user: postgres
       changed_when: false
+
     - name: Create devops user with password
-      become: yes
-      command: sudo -u postgres psql -c "CREATE USER devops WITH PASSWORD 'password';"
+      ansible.builtin.shell: psql -c "CREATE USER devops WITH PASSWORD 'password';"
+      become_user: postgres
       when: user_exists.stdout | trim == ""
+
     - name: Grant CONNECT privilege on sharedappdb to devops
-      become: yes
-      command: sudo -u postgres psql -c "GRANT CONNECT ON DATABASE sharedappdb TO
-        devops;"
+      ansible.builtin.shell: psql -c "GRANT CONNECT ON DATABASE {{ db_name }} TO devops;"
+      become_user: postgres
+
     - name: Grant ALL PRIVILEGES on sharedappdb to devops
-      become: yes
-      command: sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sharedappdb
-        TO devops;"
+      ansible.builtin.shell: psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ db_name }} TO devops;"
+      become_user: postgres
+
     - name: Grant ALL PRIVILEGES on devs table to devops
-      become: yes
-      command: sudo -u postgres psql sharedappdb -c "GRANT ALL PRIVILEGES ON TABLE
-        devs TO devops;"
+      ansible.builtin.shell: psql {{ db_name }} -c "GRANT ALL PRIVILEGES ON TABLE devs TO devops;"
+      become_user: postgres
+
     - name: Add md5 authentication for devops user in pg_hba.conf
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pg_hba_conf_path }}"
-        regexp: ^local\s+all\s+devops\s+
-        line: local   all             devops          md5
+        regexp: '^local\s+all\s+devops\s+'
+        line: 'local   all   devops   md5'
         state: present
+      become: yes
+
     - name: Add host md5 authentication for devops user in pg_hba.conf
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pg_hba_conf_path }}"
-        regexp: ^host\s+all\s+devops\s+127.0.0.1/32\s+
-        line: host    all             devops   127.0.0.1/32    md5
+        regexp: '^host\s+all\s+devops\s+127.0.0.1/32\s+'
+        line: 'host    all   devops   127.0.0.1/32    md5'
         state: present
+      become: yes
+
     - name: Create or edit .pgpass file for automatic authentication
-      copy:
-        dest: "/home/{{ ansible_user_id }}/.pgpass"
-        content: "localhost:5432:sharedappdb:devops:password\n"
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
+      ansible.builtin.copy:
+        dest: "/home/{{ ansible_user }}/.pgpass"
+        content: "localhost:5432:{{ db_name }}:devops:password\n"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0600'
-    - name: Restart PostgreSQL service
+
+    - name: Restart PostgreSQL service (second time)
       systemd:
         name: postgresql
         state: restarted
-    - name: Verify the database creation
       become: yes
-      command: sudo -u postgres psql -d sharedappdb -c "SELECT * FROM devs;"
+
+    - name: Verify the database creation
+      ansible.builtin.shell: sudo -u postgres psql -d {{ db_name }} -c "SELECT * FROM devs;"
+...
+
+
+
+
+
+# ---
+# - name: Initialize and Setup PostgreSQL Database
+#   hosts: g1
+#   # become: yes
+#   vars:
+#     db_name: sharedappdb
+#     db_user: postgres
+#     home_dir: "/home/{{ ansible_user }}"
+#     project_dir: "{{ home_dir }}/project_file"
+#     sql_file: "{{ project_dir }}/db/init.sql"
+#     pg_hba_conf_path: "{{ '/etc/postgresql/16/main/pg_hba.conf' if
+#       ansible_os_family == 'Debian' else '/var/lib/pgsql/data/pg_hba.conf'
+#       }}"
+#   tasks:
+#     - name: Modify pg_hba.conf to use md5 authentication
+#       command: sed -i "s/ident/md5/g" {{ pg_hba_conf_path }}
+#     - name: Restart PostgreSQL service
+#       systemd:
+#         name: postgresql
+#         state: restarted
+#         become: yes
+#     - name: Ensure home_dir has executable permissions
+#       become: yes
+#       command: sudo chmod +x {{ home_dir }}
+
+#     - name: Create sharedappdb database
+#       become_user: postgres
+#       shell: psql -c "CREATE DATABASE sharedappdb;"
+
+#     - name: Run init.sql in sharedappdb
+#       become_user: postgres
+#       shell: psql -d sharedappdb -f {{ sql_file}}
+
+#     - name: Check if devops user exists
+#       become: yes
+#       command: sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE
+#         rolname='devops';"
+#       register: user_exists
+#       changed_when: false
+      
+#     - name: Create devops user with password
+#       become: yes
+#       command: sudo -u postgres psql -c "CREATE USER devops WITH PASSWORD 'password';"
+#       when: user_exists.stdout | trim == ""
+#     - name: Grant CONNECT privilege on sharedappdb to devops
+#       become: yes
+#       command: sudo -u postgres psql -c "GRANT CONNECT ON DATABASE sharedappdb TO
+#         devops;"
+#     - name: Grant ALL PRIVILEGES on sharedappdb to devops
+#       become: yes
+#       command: sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE sharedappdb
+#         TO devops;"
+#     - name: Grant ALL PRIVILEGES on devs table to devops
+#       become: yes
+#       command: sudo -u postgres psql sharedappdb -c "GRANT ALL PRIVILEGES ON TABLE
+#         devs TO devops;"
+#     - name: Add md5 authentication for devops user in pg_hba.conf
+#       lineinfile:
+#         path: "{{ pg_hba_conf_path }}"
+#         regexp: ^local\s+all\s+devops\s+
+#         line: local   all             devops          md5
+#         state: present
+#         become: yes
+#     - name: Add host md5 authentication for devops user in pg_hba.conf
+#       lineinfile:
+#         path: "{{ pg_hba_conf_path }}"
+#         regexp: ^host\s+all\s+devops\s+127.0.0.1/32\s+
+#         line: host    all             devops   127.0.0.1/32    md5
+#         state: present
+#         become: yes
+#     - name: Create or edit .pgpass file for automatic authentication
+#       copy:
+#         dest: "/home/{{ ansible_user }}/.pgpass"
+#         content: "localhost:5432:sharedappdb:devops:password\n"
+#         owner: "{{ ansible_user }}"
+#         group: "{{ ansible_user }}"
+#         mode: '0600'
+#     - name: Restart PostgreSQL service
+#       systemd:
+#         name: postgresql
+#         state: restarted
+        
+#     - name: Verify the database creation
+#       become: yes
+#       command: sudo -u postgres psql -d sharedappdb -c "SELECT * FROM devs;"
