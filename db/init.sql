@@ -1,5 +1,5 @@
 CREATE DATABASE sharedappdb;
-\c sharedappdb;
+-- \c sharedappdb;
 
 CREATE TABLE devs (
   id SERIAL PRIMARY KEY,
