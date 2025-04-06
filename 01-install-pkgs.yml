@@ -63,11 +63,11 @@
       command: npm --version
       register: npm_version
 
-  handlers:
-    - name: Restart services (if necessary)
-      service:
-        name: "{{ item }}"
-        state: restarted
-      loop:
-        - postgresql
+  # handlers:
+  #   - name: Restart services (if necessary)
+  #     service:
+  #       name: "{{ item }}"
+  #       state: restarted
+  #     loop:
+  #       - postgresql
 ...
