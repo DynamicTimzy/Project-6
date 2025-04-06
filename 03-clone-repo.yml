@@ -1,6 +1,6 @@
 - name: Clone GitHub Repository and Rename
   hosts: g1
-  become: yes
+  # become: yes
   vars:
     home_dir: "{{ '/home/ubuntu' if ansible_distribution == 'Ubuntu' else '/home/fedora' if ansible_distribution == "Fedora" else '/home/cloud-user' }}"
 
@@ -15,7 +15,7 @@
       dnf:
         name: git
         state: present
-      when: ansible_distribution == "Debian"
+      when: ansible_distribution == "Fedora" or ansible_user == "cloud-user"
 
     - name: Clone the GitHub repository (alpha branch)
       git:
@@ -30,12 +30,19 @@
       args:
         removes: "{{ home_dir }}/Project-6"
         creates: "{{ home_dir }}/project_file"
+        
     - name: Change ownership of the project directory
       command: sudo chown -R ubuntu:ubuntu "{{ home_dir }}/project_file"
+      become: yes
       when: ansible_distribution == "Ubuntu"
+      
     - name: Change ownership of the project directory
       command: sudo chown -R fedora:fedora "{{ home_dir }}/project_file"
+      become: yes
       when: ansible_distribution == "Fedora"
+      
     - name: Change ownership of the project directory
       command: sudo chown -R cloud-user:cloud-user "{{ home_dir }}/project_file"
-      when: ansible_distribution == "Cloud-user"
+      become: yes
+      when: ansible_user == "cloud-user"
+...
