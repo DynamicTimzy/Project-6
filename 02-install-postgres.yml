@@ -1,32 +1,98 @@
 ---
-- name: Install PostgreSQL on Debian or RedHat
+- name: PostgreSQL Setup Playbook for Ubuntu and CentOS
   hosts: g1
-  become: yes
+  become: true
   tasks:
-    - name: Update package lists (Debian)
-      apt:
-        update_cache: yes
-      when: ansible_os_family == "Debian"
-    - name: Update package lists (RedHat)
-      dnf:
-        update_cache: yes
-      when: ansible_os_family == "RedHat"
-    - name: Install PostgreSQL and contrib packages (Debian)
+
+    # For Debian-based systems (like Ubuntu):
+    - name: Install PostgreSQL on Debian-based systems (Ubuntu)
       apt:
         name:
           - postgresql
           - postgresql-contrib
-          - libpq-dev
         state: present
-      when: ansible_os_family == "Debian"
-    - name: Install PostgreSQL and contrib packages (RedHat)
+      when: ansible_os_family == 'Debian'
+
+    - name: Create PostgreSQL Database on Debian-based systems (Ubuntu)
+      shell: sudo -u postgres psql -c "CREATE DATABASE sharedappdb;"
+      when: ansible_os_family == 'Debian'
+
+    - name: Initialize PostgreSQL Database for Debian-based systems (Ubuntu)
+      shell: sudo -u postgres psql -d sharedappdb -f /home/ubuntu/project_file/db/init.sql
+      when: ansible_os_family == 'Debian'
+
+    # For Red Hat-based systems (like CentOS):
+    - name: Install PostgreSQL 15 on Red Hat-based systems (CentOS)
       dnf:
         name:
-          - postgresql-server
-          - postgresql-contrib
-          - postgresql-devel
+          - https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
         state: present
-      when: ansible_os_family == "RedHat"
+      when: ansible_os_family == 'RedHat'
+
+    - name: Clean and refresh dnf metadata on Red Hat-based systems (CentOS)
+      shell: sudo dnf clean all && sudo dnf makecache
+      when: ansible_os_family == 'RedHat'
+
+    - name: Disable built-in PostgreSQL module on Red Hat-based systems (CentOS)
+      shell: sudo dnf -qy module disable postgresql
+      when: ansible_os_family == 'RedHat'
+
+    - name: Install PostgreSQL 15 on Red Hat-based systems (CentOS)
+      dnf:
+        name:
+          - postgresql15-server
+          - postgresql15
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Initialize PostgreSQL 15 on Red Hat-based systems (CentOS)
+      shell: sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
+      when: ansible_os_family == 'RedHat'
+
+    - name: Enable and start PostgreSQL 15 on Red Hat-based systems (CentOS)
+      shell: sudo systemctl enable --now postgresql-15
+      when: ansible_os_family == 'RedHat'
+
+    - name: Create PostgreSQL Database on Red Hat-based systems (CentOS)
+      shell: sudo -u postgres psql -c "CREATE DATABASE sharedappdb;"
+      when: ansible_os_family == 'RedHat'
+
+    - name: Initialize PostgreSQL Database for Red Hat-based systems (CentOS)
+      shell: sudo -u postgres psql -d sharedappdb -f /home/cloud-user/project_file/db/init.sql
+      when: ansible_os_family == 'RedHat'
+
+
+
+
+# ---
+# - name: Install PostgreSQL on Debian or RedHat
+#   hosts: g1
+#   become: yes
+#   tasks:
+#     - name: Update package lists (Debian)
+#       apt:
+#         update_cache: yes
+#       when: ansible_os_family == "Debian"
+#     - name: Update package lists (RedHat)
+#       dnf:
+#         update_cache: yes
+#       when: ansible_os_family == "RedHat"
+#     - name: Install PostgreSQL and contrib packages (Debian)
+#       apt:
+#         name:
+#           - postgresql
+#           - postgresql-contrib
+#           - libpq-dev
+#         state: present
+#       when: ansible_os_family == "Debian"
+#     - name: Install PostgreSQL and contrib packages (RedHat)
+#       dnf:
+#         name:
+#           - postgresql-server
+#           - postgresql-contrib
+#           - postgresql-devel
+#         state: present
+#       when: ansible_os_family == "RedHat"
 
 
 # We need to clear the files in data dir before RedHat family can initialize a PostgreDB, Debians are lenient and can still function with existing files and directories.
@@ -34,30 +100,30 @@
 # Fedora/RedHat-based systems: On RedHat-based systems (including Fedora), PostgreSQL uses the postgresql-setup utility to initialize the database. This utility typically expects the data directory (/var/lib/pgsql/data) to be empty when initializing the database for the first time. If there are any remnants from a previous PostgreSQL installation, it will fail with the error you're seeing.
 
 # Ubuntu/Debian-based systems: On Debian-based systems like Ubuntu, PostgreSQL uses the pg_createcluster utility to create and initialize database clusters. This utility is more flexible and can handle pre-existing directories or clusters more gracefully, typically overwriting them or using a different approach.
-    - name: Remove old PostgreSQL data directory (if it exists)
-      file:
-        path: /var/lib/pgsql/data
-        state: absent
-      become: yes
-      when: ansible_os_family == "RedHat"
+    # - name: Remove old PostgreSQL data directory (if it exists)
+    #   file:
+    #     path: /var/lib/pgsql/data
+    #     state: absent
+    #   become: yes
+    #   when: ansible_os_family == "RedHat"
      
-    - name: Initialize PostgreSQL database (RedHat)
-      command: postgresql-setup --initdb
-      when: ansible_os_family == "RedHat"
+    # - name: Initialize PostgreSQL database (RedHat)
+    #   command: postgresql-setup --initdb
+    #   when: ansible_os_family == "RedHat"
       
-    - name: Enable and start PostgreSQL service
-      systemd:
-        name: postgresql
-        enabled: yes
-        state: started
-    - name: Verify PostgreSQL installation
-      command: psql --version
-      register: postgres_version
-    - name: Install Python3, Pip, and Virtual Environment
-      package:
-        name:
-          - python3
-          - python3-pip
-          - python3-virtualenv
-        state: present
+    # - name: Enable and start PostgreSQL service
+    #   systemd:
+    #     name: postgresql
+    #     enabled: yes
+    #     state: started
+    # - name: Verify PostgreSQL installation
+    #   command: psql --version
+    #   register: postgres_version
+    # - name: Install Python3, Pip, and Virtual Environment
+    #   package:
+    #     name:
+    #       - python3
+    #       - python3-pip
+    #       - python3-virtualenv
+    #     state: present
 ...
